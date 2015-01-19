@@ -1,0 +1,196 @@
+# Erlang Shell
+help()
+q() -> quit() -> init:stop()
+ctrl+g
+
+# Invariable variables
+1. variables can't be varaible in functional programming.
+2. variables begin with a uppercase letter
+
+# = operator: 
+1. has the role of comparing the values and complain if they are different.
+If they are the same, return the value.
+2. when mixed with variables, if the left-hand side term is a variable and it is unboud (has no value associated with it), Erlang will automatically bind the right-hand side value to the variable on the left-hand side. The comparison will consequently succeed and the variable will keep the value in memory.
+3. This behavior is the basis of something called 'Pattern matching'
+
+# atoms
+
+# boolean operators
+true and false
+true or false
+true xor false
+not true
+andalso
+orelse
+
+# equality testing
+5 =:= 5.0 exact equality
+1 =/= 0
+5 == 5.0
+5 /= 5.0
+
+# comparison operators
+1 < 2
+1 < 1
+1 >= 1
+1 =< 1
+
+# Compare items of any type
+5 =:= true
+Rationale: 
+the creators of Erlang thought pragmatism beats theory and decided it would be great to be able to simply write things like general sorting algorithms that could order any term.
+
+Erlang has no such things as boolean true and false. The terms true and false are atoms.
+The correct ordering of each element in a comparison is the following:
+number < atom < reference < fun < port < pid < tuple < list < bit string.
+
+# Tuple
+
+The _ variable:
+1. is always seen as unbound and acts as a wildcard for pattern matching.
+2. Pattern matching to unpack tuples will only work if the number of elements is the same.
+
+# Lists
+++:
+1. glue list together
+2. right associative
+[1, 2, 3] ++ [4, 5] => [1, 2, 3, 4, 5]
+--:
+1. remove elements from a list
+2. right associative
+[1, 2, 3] -- [1, 2] -- [2] => [2, 3]
+
+two built in functions (BIF)
+hd(): the first element of a list is named the HEAD
+tl(): the rest of the list
+
+BIFs:
+1. are usually functions that could not be implemented in pure Erlang
+2. are defined in C, or whichever language Erlang happens to be implemented on
+3. length(List): for the sake of performance
+
+Accessing or adding the head is fast and efficient.
+List = [2,3,4].
+NewList = [1|List].
+[Head|Tail] = NewList.
+
+|: the cons operator (constructor). Any list can be built with only cons and values.
+[3 | [2 | [1 | []] ] ].
+
+## list comprehensions
+1. ways to build or modify lists
+2. based off the idea of set notation
+3. about building sets from other sets
+{2n : n in L}
+[2*N || N <- [1,2,3,4]].
+1. brackets {} becomes square brackets []
+2. the colon : becomes two pipes ||
+3. the word in becomes the arrow <-
+4. each value is sequentially pattern matched to N
+5. The arrow acts like the = operator with the exception that it does not throw exceptions.
+
+### Adding constraints by using operations that return boolean values.
+[X || X <- [1,2,3,4,5,6,7,8,9,10], X rem 2 =:= 0].
+
+The recipe for list comprehension:
+NewList = [Expression || Pattern <- List, Condition1, Condition2, ... ConditionN].
+
+The part Pattern <- List is named a Generator expression. You can have more than one:
+[X+Y || X <- [1,2], Y <- [2,3]].
+
+More generic recipe:
+NewList = [Expression || GeneratorExp1, GeneratorExp2, ..., GeneratorExpN, Condition1, Condition2, ... ConditionM].
+
+Note that the generator expressions coupled with pattern matching also act as a filter.
+
+# Module
+1. A bunch of functions regrouped in a single file, under a single name.
+2. All functions in Erlang must be defined in modules.
+3. The BIFs like hd or tl, actually belong to the erlang module as well as all of the arithmetic, logic and boolean operators.
+4. erlang module is automatically imported when you use Erlang.
+5. Every other function defined in a module needs to be called with the form Module:Function(Arguments)
+6. put functions about similar things inside a single module.
+7. lists: common operations on lists
+8. io: functions to do input and output
+9. erlang: have function do math, conversions, deal with multiprocessing, fiddle with the virtual machine's settings, etc.
+
+## Declaration
+1. functions
+	1. the syntax follows the form  Name(Args) -> Body.
+		1. name has to be an atom 
+	  2. Body can be one or more Erlang expressions separated by commas and end with a period
+		3. Does not have return keyword and the last expression of a function to be executed will have its value returned to the caller.
+
+2. attributes
+Attributes are metadata describing the module itself such as
+1. the name
+2. the functions that should be visible to the outside world
+3. the author of the code
+
+## compiling
+cd("/path/to/where/you/saved/the-module/").
+c(useless).
+
+.beam:
+1. Stands for Bogdan / Björn's Erlang Abstract Machine, which is the VM itself.
+
+Compilation flags:
+1. -debug_info
+For tools like debuggers, code coverage and static analysis tool
+2. -{outdir, Dir}
+3. -export_all
+will export all the functions defined.
+4. -{d, Macro} or {d, Macro, Value}
+defines a macro to be used in this module where Macro is an atom.
+
+compile:file(useless, [debug_info, export_all]).
+c(useless, [debug_info, export_all]).
+
+define compile flags within a module:
+-compile([debug_info, export_all])
+
+module:module_info/0
+
+VSN: 
+1. Version number
+2. automatically generated unique value differentiating each version of your code, excluding comments
+3. used in code hot-loading ( upgrading an application while it runs, without stopping it)
+
+General module design:
+1. avoid circular references
+
+-Name(Attribute)
+-module(name)
+M:F(A)
+
+# pattern matching
+function(X) ->
+	Expression;
+function(Y) ->
+	Expression;
+function(_) ->
+	Expression.
+
+1. Each of these function declarations is called a function clasue.	
+2. Function clauses must be separated by semicolons ; and together form a function declaration
+
+Limits of pattern matching:
+1. it con either specify really precise values such as a known number of atom, or abstract values such as the head | tail of a list, a tuple of N elements, or anything (_ and unbound variables), etc.
+
+# Guards
+1. additional clauses that can go in a function's head to make pattern matching more expressive.
+
+2. a basic rule for guard expression is that they must return true to succeed.
+, => andalso
+; => orelse
+
+3. can use a few more functions than comparsions and boolean evaluation in functions, including match operations, and functions about data types.
+
+Cons:
+1. Do not accept user defined functions because of the side effects.
+Erlang is not purely functional programming language ( like Haskell is) because it relies on side effect a lot:
+1) do i/o
+2) send messages between actors
+3) throw errors as you want and when you want
+
+# Ifs
